@@ -80,6 +80,8 @@
         <div class="date-row">
             <label>记录日期：</label>
             <input type="date" id="record-date" value="{{ now }}">
+            <label style="margin-left:16px">银行/平台：</label>
+            <input type="text" id="record-bank" placeholder="如：招商银行、天天基金" style="width:200px">
         </div>
         <table>
             <thead>
@@ -167,11 +169,12 @@ function saveData() {
     if (!items.length) { showToast('没有有效数据', 'error'); return; }
 
     const date = document.getElementById('record-date').value;
+    const bank = document.getElementById('record-bank').value.trim();
 
     fetch('/ocr/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, date })
+        body: JSON.stringify({ items: items.map(i => ({...i, bank})), date })
     })
     .then(r => r.json())
     .then(data => {
