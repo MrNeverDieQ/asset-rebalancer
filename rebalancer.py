@@ -80,7 +80,8 @@ def analyze(amounts: Dict[str, float]) -> RebalanceResult:
     stock_large = amounts.get(cfg.TAG_STOCK_LARGE, 0)
     stock_div = amounts.get(cfg.TAG_STOCK_DIVIDEND, 0)
     stock_star = amounts.get(cfg.TAG_STOCK_STAR, 0)
-    stock_total = stock_large + stock_div + stock_star
+    stock_consumer = amounts.get(cfg.TAG_STOCK_CONSUMER, 0)
+    stock_total = stock_large + stock_div + stock_star + stock_consumer
     other = stock_total + bond  # 其他资产 = 股票 + 债券
 
     result = RebalanceResult(total_amount=total, amounts=amounts)
@@ -105,11 +106,13 @@ def analyze(amounts: Dict[str, float]) -> RebalanceResult:
         r_large = stock_large / stock_total
         r_div = stock_div / stock_total
         r_star = stock_star / stock_total
+        r_consumer = stock_consumer / stock_total
     else:
-        r_large = r_div = r_star = 0
+        r_large = r_div = r_star = r_consumer = 0
     result.deviations.append(_check("第三层：股票内部", "大盘", r_large, cfg.TARGET_LARGE_IN_STOCK))
     result.deviations.append(_check("第三层：股票内部", "红利", r_div, cfg.TARGET_DIVIDEND_IN_STOCK))
     result.deviations.append(_check("第三层：股票内部", "科创", r_star, cfg.TARGET_STAR_IN_STOCK))
+    result.deviations.append(_check("第三层：股票内部", "消费", r_consumer, cfg.TARGET_CONSUMER_IN_STOCK))
 
     # --- 生成操作计划：计算每个 tag 的目标金额 ---
     if result.need_rebalance:
@@ -120,6 +123,7 @@ def analyze(amounts: Dict[str, float]) -> RebalanceResult:
             cfg.TAG_STOCK_LARGE: total * cfg.TARGET_OTHER_RATIO * cfg.TARGET_STOCK_IN_OTHER * cfg.TARGET_LARGE_IN_STOCK,
             cfg.TAG_STOCK_DIVIDEND: total * cfg.TARGET_OTHER_RATIO * cfg.TARGET_STOCK_IN_OTHER * cfg.TARGET_DIVIDEND_IN_STOCK,
             cfg.TAG_STOCK_STAR: total * cfg.TARGET_OTHER_RATIO * cfg.TARGET_STOCK_IN_OTHER * cfg.TARGET_STAR_IN_STOCK,
+            cfg.TAG_STOCK_CONSUMER: total * cfg.TARGET_OTHER_RATIO * cfg.TARGET_STOCK_IN_OTHER * cfg.TARGET_CONSUMER_IN_STOCK,
         }
         # 计算公式说明
         formulas = {
@@ -127,7 +131,8 @@ def analyze(amounts: Dict[str, float]) -> RebalanceResult:
             cfg.TAG_BOND: "90% × 30% = 27%（其他资产占比 × 债券在其他中占比）",
             cfg.TAG_STOCK_LARGE: "90% × 70% × 50% = 31.5%（其他 × 股票 × 大盘）",
             cfg.TAG_STOCK_DIVIDEND: "90% × 70% × 30% = 18.9%（其他 × 股票 × 红利）",
-            cfg.TAG_STOCK_STAR: "90% × 70% × 20% = 12.6%（其他 × 股票 × 科创）",
+            cfg.TAG_STOCK_STAR: "90% × 70% × 15% = 9.45%（其他 × 股票 × 科创）",
+            cfg.TAG_STOCK_CONSUMER: "90% × 70% × 5% = 3.15%（其他 × 股票 × 消费）",
         }
         for tag in [t for t in cfg.ALL_TAGS if t != cfg.TAG_CASH]:
             cur = amounts.get(tag, 0)
