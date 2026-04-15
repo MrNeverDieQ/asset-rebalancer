@@ -7,26 +7,36 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; }
+
+        /* 导航栏 */
         .navbar { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 0 24px; display: flex; align-items: center; height: 56px; box-shadow: 0 1px 4px rgba(0,0,0,.06); position: sticky; top: 0; z-index: 10; }
         .navbar .logo { font-size: 18px; font-weight: 700; color: #1677ff; margin-right: 32px; }
         .navbar a { color: #666; text-decoration: none; padding: 16px 12px; font-size: 14px; border-bottom: 2px solid transparent; transition: all .2s; }
         .navbar a:hover { color: #1677ff; }
         .navbar a.active { color: #1677ff; border-bottom-color: #1677ff; font-weight: 500; }
+
         .container { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
-        h1 { text-align: center; margin-bottom: 24px; font-size: 24px; }
-        a { color: #1677ff; text-decoration: none; }
 
-        .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 20px; }
-        .card h2 { font-size: 18px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
-
-        .upload-card { text-align: center; padding: 32px; }
-        .upload-card input[type=file] { margin: 12px 0; }
-        .upload-card button { background: #1677ff; color: #fff; border: none; padding: 10px 32px; border-radius: 6px; font-size: 15px; cursor: pointer; }
-        .upload-card button:hover { background: #0958d9; }
-
-        .flash { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+        /* Flash */
+        .flash { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
         .flash.error { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; }
 
+        /* 拖拽上传区 */
+        .upload-zone { background: #fff; border: 2px dashed #d9d9d9; border-radius: 12px; padding: 48px 32px; text-align: center; cursor: pointer; transition: all .3s; margin-bottom: 24px; }
+        .upload-zone:hover, .upload-zone.dragover { border-color: #1677ff; background: #f0f5ff; }
+        .upload-zone .icon { font-size: 48px; margin-bottom: 12px; }
+        .upload-zone p { color: #999; font-size: 14px; margin-top: 8px; }
+        .upload-zone input[type=file] { display: none; }
+        .upload-zone .filename { color: #1677ff; font-weight: 500; margin-top: 8px; }
+        .upload-zone button { background: #1677ff; color: #fff; border: none; padding: 10px 40px; border-radius: 6px; font-size: 15px; cursor: pointer; margin-top: 16px; transition: background .2s; }
+        .upload-zone button:hover { background: #0958d9; }
+        .upload-zone .hint { font-size: 12px; color: #bbb; margin-top: 12px; }
+
+        /* 卡片 */
+        .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 6px rgba(0,0,0,.06); margin-bottom: 20px; }
+        .card h2 { font-size: 16px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+
+        /* 表格 */
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         th { background: #fafafa; text-align: left; padding: 10px 12px; font-weight: 600; border-bottom: 2px solid #f0f0f0; }
         td { padding: 8px 12px; border-bottom: 1px solid #f5f5f5; }
@@ -34,38 +44,39 @@
         td input, td select { width: 100%; padding: 6px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; }
         td input:focus, td select:focus { border-color: #1677ff; outline: none; }
 
+        /* 按钮 */
         .btn-row { margin-top: 16px; display: flex; gap: 12px; justify-content: center; }
-        .btn { padding: 10px 32px; border-radius: 6px; font-size: 15px; cursor: pointer; border: none; }
-        .btn-primary { background: #1677ff; color: #fff; }
-        .btn-primary:hover { background: #0958d9; }
+        .btn { padding: 10px 32px; border-radius: 6px; font-size: 15px; cursor: pointer; border: none; transition: background .2s; }
         .btn-success { background: #52c41a; color: #fff; }
         .btn-success:hover { background: #389e0d; }
         .btn-danger { background: #ff4d4f; color: #fff; }
         .btn-danger:hover { background: #cf1322; }
         .btn-ghost { background: #fff; color: #333; border: 1px solid #d9d9d9; }
+        .btn-ghost:hover { border-color: #1677ff; color: #1677ff; }
 
-        .date-row { margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .date-row input { padding: 6px 8px; border: 1px solid #d9d9d9; border-radius: 4px; }
-
-        .nav { text-align: center; margin-bottom: 20px; font-size: 14px; }
-        .nav a { margin: 0 12px; }
+        .date-row { margin-bottom: 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .date-row input, .date-row select { padding: 6px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; }
 
         .toast { position: fixed; top: 20px; right: 20px; padding: 12px 24px; border-radius: 8px; color: #fff; font-size: 14px; display: none; z-index: 999; }
         .toast-success { background: #52c41a; }
         .toast-error { background: #ff4d4f; }
+
+        @media (max-width: 640px) {
+            .container { padding: 16px 12px; }
+            table { font-size: 13px; }
+            th, td { padding: 8px 6px; }
+        }
     </style>
 </head>
 <body>
+
 <nav class="navbar">
     <span class="logo">📊 再平衡</span>
     <a href="/">Excel 分析</a>
     <a href="/ocr" class="active">截图识别</a>
 </nav>
+
 <div class="container">
-    <div class="nav">
-        <a href="/">📊 Excel 分析</a>
-        <a href="/ocr">📷 截图识别</a>
-    </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% for cat, msg in messages %}
@@ -73,15 +84,17 @@
     {% endfor %}
     {% endwith %}
 
-    <!-- 上传区 -->
-    <div class="card upload-card">
-        <form method="POST" action="/ocr/upload" enctype="multipart/form-data">
-            <p>上传手机截图，自动识别基金名称和金额</p>
-            <input type="file" name="image" accept="image/*" required>
-            <br>
-            <button type="submit">🔍 开始识别</button>
-        </form>
+    <!-- 拖拽上传区 -->
+    <form method="POST" action="/ocr/upload" enctype="multipart/form-data" id="uploadForm">
+    <div class="upload-zone" id="dropZone">
+        <div class="icon">📷</div>
+        <p>拖拽截图到此处，或 <span style="color:#1677ff;cursor:pointer" onclick="document.getElementById('fileInput').click()">点击选择</span></p>
+        <input type="file" name="image" id="fileInput" accept="image/*" required>
+        <div class="filename" id="fileName"></div>
+        <button type="submit" id="submitBtn" style="display:none">🔍 开始识别</button>
+        <div class="hint">支持 PNG / JPG / BMP / WebP 格式</div>
     </div>
+    </form>
 
     {% if items %}
     <!-- 可编辑表格 -->
@@ -91,7 +104,7 @@
             <label>记录日期：</label>
             <input type="date" id="record-date" value="{{ now }}">
             <label style="margin-left:16px">银行/平台：</label>
-            <select id="record-bank" style="width:200px;padding:6px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:14px" required>
+            <select id="record-bank" required>
                 <option value="">请选择</option>
                 {% for bank in allowed_banks %}
                 <option value="{{ bank }}">{{ bank }}</option>
@@ -137,8 +150,28 @@
 
 <div class="toast" id="toast"></div>
 
-{% if items %}
 <script>
+// 拖拽上传
+const zone = document.getElementById('dropZone');
+const input = document.getElementById('fileInput');
+const nameEl = document.getElementById('fileName');
+const btn = document.getElementById('submitBtn');
+
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) { input.files = e.dataTransfer.files; showFile(); }
+});
+input.addEventListener('change', showFile);
+function showFile() {
+    if (input.files.length) {
+        nameEl.textContent = '🖼️ ' + input.files[0].name;
+        btn.style.display = 'inline-block';
+    }
+}
+
+{% if items %}
 const allTags = {{ all_tags | tojson }};
 
 function reindex() {
@@ -200,7 +233,7 @@ function saveData() {
     })
     .catch(e => showToast('保存失败: ' + e, 'error'));
 }
-</script>
 {% endif %}
+</script>
 </body>
 </html>
