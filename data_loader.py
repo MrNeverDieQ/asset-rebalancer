@@ -64,9 +64,11 @@ def load_raw_items(filepath: str) -> list:
     df = pd.read_excel(filepath)
     col_date, col_name = cfg.COLUMN_MAP["date"], cfg.COLUMN_MAP["fund_name"]
     col_amount, col_tag = cfg.COLUMN_MAP["amount"], cfg.COLUMN_MAP["tag"]
+    col_bank = cfg.COLUMN_MAP["bank"]
 
     df[col_date] = pd.to_datetime(df[col_date])
     df_latest = df[df[col_date] == df[col_date].max()]
 
-    return [{"name": r[col_name], "amount": float(r[col_amount]), "tag": r[col_tag]}
+    return [{"name": r[col_name], "amount": float(r[col_amount]), "tag": r[col_tag],
+             "bank": r.get(col_bank, "") if col_bank in df.columns else ""}
             for _, r in df_latest.iterrows()]

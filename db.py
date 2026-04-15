@@ -18,6 +18,7 @@ def _get_conn() -> sqlite3.Connection:
         CREATE TABLE IF NOT EXISTS holdings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             fund_name TEXT NOT NULL,
+            bank TEXT NOT NULL DEFAULT '',
             amount REAL NOT NULL,
             tag TEXT NOT NULL,
             record_date TEXT NOT NULL,
@@ -44,8 +45,8 @@ def save_holdings(items: List[Dict], record_date: str = None) -> int:
     conn = _get_conn()
     try:
         conn.executemany(
-            "INSERT INTO holdings (fund_name, amount, tag, record_date) VALUES (?, ?, ?, ?)",
-            [(i["name"], float(i["amount"]), i["tag"], record_date) for i in items]
+            "INSERT INTO holdings (fund_name, bank, amount, tag, record_date) VALUES (?, ?, ?, ?, ?)",
+            [(i["name"], i.get("bank", ""), float(i["amount"]), i["tag"], record_date) for i in items]
         )
         conn.commit()
         logger.info(f"保存 {len(items)} 条记录，日期 {record_date}")
