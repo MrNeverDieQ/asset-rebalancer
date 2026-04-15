@@ -37,6 +37,11 @@ def index():
     file.save(filepath)
 
     try:
+        # 检测多日期
+        date_info = data_loader.check_dates(filepath)
+        if date_info["count"] > 1:
+            flash(f"检测到 {date_info['count']} 个日期，仅使用最新日期: {date_info['latest']}", "warning")
+
         amounts = data_loader.load_portfolio(filepath)
         result = rebalancer.analyze(amounts)
         # 同时存入 DB

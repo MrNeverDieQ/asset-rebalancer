@@ -11,9 +11,18 @@ import config as cfg
 logger = logging.getLogger(__name__)
 
 
+def check_dates(filepath: str) -> dict:
+    """检测 Excel 中的日期数量，返回 {count, latest}"""
+    df = pd.read_excel(filepath)
+    col_date = cfg.COLUMN_MAP["date"]
+    df[col_date] = pd.to_datetime(df[col_date])
+    return {"count": df[col_date].nunique(), "latest": df[col_date].max().strftime("%Y-%m-%d")}
+
+
 def load_portfolio(filepath: str) -> Dict[str, float]:
     """
     读取 Excel，返回最新日期各 tag 的汇总金额。
+    如果存在多个日期，仅使用最新日期。
 
     Args:
         filepath: Excel 文件路径
@@ -37,6 +46,12 @@ def load_portfolio(filepath: str) -> Dict[str, float]:
     df[col_date] = pd.to_datetime(df[col_date])
     latest = df[col_date].max()
     df_latest = df[df[col_date] == latest]
+
+    # 检测多日期
+    n_dates = df[col_date].nunique()
+    if n_dates > 1:
+        logger.warning(f"检测到 {n_dates} 个日期，仅使用最新日期: {latest.strftime('%Y-%m-%d')}")
+
     logger.info(f"使用日期: {latest.strftime('%Y-%m-%d')}，共 {len(df_latest)} 条记录")
 
     # 校验 tag 合法性
