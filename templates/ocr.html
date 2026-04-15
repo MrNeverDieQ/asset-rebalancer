@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>截图识别 - 资产配置再平衡</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 24px; font-size: 24px; }
+        a { color: #1677ff; text-decoration: none; }
+
+        .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 20px; }
+        .card h2 { font-size: 18px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+
+        .upload-card { text-align: center; padding: 32px; }
+        .upload-card input[type=file] { margin: 12px 0; }
+        .upload-card button { background: #1677ff; color: #fff; border: none; padding: 10px 32px; border-radius: 6px; font-size: 15px; cursor: pointer; }
+        .upload-card button:hover { background: #0958d9; }
+
+        .flash { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+        .flash.error { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #fafafa; text-align: left; padding: 10px 12px; font-weight: 600; border-bottom: 2px solid #f0f0f0; }
+        td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; }
+        td input, td select { width: 100%; padding: 6px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; }
+        td input:focus, td select:focus { border-color: #1677ff; outline: none; }
+
+        .btn-row { margin-top: 16px; display: flex; gap: 12px; justify-content: center; }
+        .btn { padding: 10px 32px; border-radius: 6px; font-size: 15px; cursor: pointer; border: none; }
+        .btn-primary { background: #1677ff; color: #fff; }
+        .btn-primary:hover { background: #0958d9; }
+        .btn-success { background: #52c41a; color: #fff; }
+        .btn-success:hover { background: #389e0d; }
+        .btn-danger { background: #ff4d4f; color: #fff; }
+        .btn-danger:hover { background: #cf1322; }
+        .btn-ghost { background: #fff; color: #333; border: 1px solid #d9d9d9; }
+
+        .date-row { margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .date-row input { padding: 6px 8px; border: 1px solid #d9d9d9; border-radius: 4px; }
+
+        .nav { text-align: center; margin-bottom: 20px; font-size: 14px; }
+        .nav a { margin: 0 12px; }
+
+        .toast { position: fixed; top: 20px; right: 20px; padding: 12px 24px; border-radius: 8px; color: #fff; font-size: 14px; display: none; z-index: 999; }
+        .toast-success { background: #52c41a; }
+        .toast-error { background: #ff4d4f; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📷 截图识别持仓</h1>
+    <div class="nav">
+        <a href="/">📊 Excel 分析</a>
+        <a href="/ocr">📷 截图识别</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="flash {{ cat }}">{{ msg }}</div>
+    {% endfor %}
+    {% endwith %}
+
+    <!-- 上传区 -->
+    <div class="card upload-card">
+        <form method="POST" action="/ocr/upload" enctype="multipart/form-data">
+            <p>上传手机截图，自动识别基金名称和金额</p>
+            <input type="file" name="image" accept="image/*" required>
+            <br>
+            <button type="submit">🔍 开始识别</button>
+        </form>
+    </div>
+
+    {% if items %}
+    <!-- 可编辑表格 -->
+    <div class="card">
+        <h2>识别结果（请校验后保存）</h2>
+        <div class="date-row">
+            <label>记录日期：</label>
+            <input type="date" id="record-date" value="{{ now }}">
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:40px">#</th>
+                    <th>基金名称</th>
+                    <th style="width:150px">金额</th>
+                    <th style="width:120px">类型</th>
+                    <th style="width:60px">操作</th>
+                </tr>
+            </thead>
+            <tbody id="items-body">
+                {% for item in items %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><input type="text" class="item-name" value="{{ item.name }}"></td>
+                    <td><input type="number" class="item-amount" value="{{ item.amount }}" step="0.01"></td>
+                    <td>
+                        <select class="item-tag">
+                            <option value="">-- 选择 --</option>
+                            {% for tag in all_tags %}
+                            <option value="{{ tag }}" {% if item.tag == tag %}selected{% endif %}>{{ tag }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="this.closest('tr').remove();reindex()">删除</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="btn-row">
+            <button class="btn btn-ghost" onclick="addRow()">+ 添加一行</button>
+            <button class="btn btn-success" onclick="saveData()">✅ 确认保存并分析</button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="toast" id="toast"></div>
+
+{% if items %}
+<script>
+const allTags = {{ all_tags | tojson }};
+
+function reindex() {
+    document.querySelectorAll('#items-body tr').forEach((tr, i) => {
+        tr.querySelector('td').textContent = i + 1;
+    });
+}
+
+function addRow() {
+    const tbody = document.getElementById('items-body');
+    const idx = tbody.rows.length + 1;
+    const opts = allTags.map(t => `<option value="${t}">${t}</option>`).join('');
+    tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+            <td>${idx}</td>
+            <td><input type="text" class="item-name" value=""></td>
+            <td><input type="number" class="item-amount" value="0" step="0.01"></td>
+            <td><select class="item-tag"><option value="">-- 选择 --</option>${opts}</select></td>
+            <td><button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="this.closest('tr').remove();reindex()">删除</button></td>
+        </tr>
+    `);
+}
+
+function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast toast-' + type;
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function saveData() {
+    const rows = document.querySelectorAll('#items-body tr');
+    const items = [];
+    for (const row of rows) {
+        const name = row.querySelector('.item-name').value.trim();
+        const amount = row.querySelector('.item-amount').value;
+        const tag = row.querySelector('.item-tag').value;
+        if (!name) continue;
+        if (!tag) { showToast(`"${name}" 未选择类型`, 'error'); return; }
+        items.push({ name, amount: parseFloat(amount), tag });
+    }
+    if (!items.length) { showToast('没有有效数据', 'error'); return; }
+
+    const date = document.getElementById('record-date').value;
+
+    fetch('/ocr/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items, date })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) { showToast(data.error, 'error'); return; }
+        showToast(`已保存 ${data.saved} 条记录`, 'success');
+        setTimeout(() => window.location.href = data.redirect, 1000);
+    })
+    .catch(e => showToast('保存失败: ' + e, 'error'));
+}
+</script>
+{% endif %}
+</body>
+</html>
