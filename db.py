@@ -22,7 +22,8 @@ def _get_conn() -> sqlite3.Connection:
             amount REAL NOT NULL,
             tag TEXT NOT NULL,
             record_date TEXT NOT NULL,
-            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(fund_name, bank, amount, tag, record_date)
         )
     """)
     return conn
@@ -45,7 +46,7 @@ def save_holdings(items: List[Dict], record_date: str = None) -> int:
     conn = _get_conn()
     try:
         conn.executemany(
-            "INSERT INTO holdings (fund_name, bank, amount, tag, record_date) VALUES (?, ?, ?, ?, ?)",
+            "INSERT OR IGNORE INTO holdings (fund_name, bank, amount, tag, record_date) VALUES (?, ?, ?, ?, ?)",
             [(i["name"], i.get("bank", ""), float(i["amount"]), i["tag"], record_date) for i in items]
         )
         conn.commit()
