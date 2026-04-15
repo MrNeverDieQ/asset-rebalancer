@@ -6,8 +6,10 @@ import logging
 
 from flask import Flask, render_template, request, redirect, url_for, flash
 
+import config as cfg
 import data_loader
 import rebalancer
+import db
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -34,6 +36,9 @@ def index():
     try:
         amounts = data_loader.load_portfolio(filepath)
         result = rebalancer.analyze(amounts)
+        # 同时存入 DB
+        items = data_loader.load_raw_items(filepath)
+        db.save_holdings(items)
     except Exception as e:
         flash(f"分析失败: {e}", "error")
         return redirect(url_for("index"))

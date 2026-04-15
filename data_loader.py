@@ -52,3 +52,21 @@ def load_portfolio(filepath: str) -> Dict[str, float]:
 
     logger.info(f"资产汇总: {summary}")
     return summary
+
+
+def load_raw_items(filepath: str) -> list:
+    """
+    读取 Excel 最新日期数据，返回 db.save_holdings 所需格式。
+
+    Returns:
+        [{"name": "沪深300", "amount": 35000, "tag": "大盘"}, ...]
+    """
+    df = pd.read_excel(filepath)
+    col_date, col_name = cfg.COLUMN_MAP["date"], cfg.COLUMN_MAP["fund_name"]
+    col_amount, col_tag = cfg.COLUMN_MAP["amount"], cfg.COLUMN_MAP["tag"]
+
+    df[col_date] = pd.to_datetime(df[col_date])
+    df_latest = df[df[col_date] == df[col_date].max()]
+
+    return [{"name": r[col_name], "amount": float(r[col_amount]), "tag": r[col_tag]}
+            for _, r in df_latest.iterrows()]
