@@ -41,9 +41,6 @@ TARGET_CONSUMER_IN_STOCK = 0.05
 # ============ 再平衡阈值 ============
 REBALANCE_THRESHOLD = 0.05     # 偏离 5% 触发再平衡
 
-# ============ 输出 ============
-OUTPUT_REPORT = "rebalance_report.xlsx"
-
 # ============ 数据库 ============
 DB_PATH = "portfolio.db"
 
