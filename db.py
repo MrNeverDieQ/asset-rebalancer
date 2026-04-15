@@ -22,8 +22,7 @@ def _get_conn() -> sqlite3.Connection:
             amount REAL NOT NULL,
             tag TEXT NOT NULL,
             record_date TEXT NOT NULL,
-            created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            UNIQUE(fund_name, bank, amount, tag, record_date)
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
     """)
     return conn
@@ -50,8 +49,12 @@ def save_holdings(items: List[Dict], record_date: str = None) -> int:
             bank = i.get("bank", "")
             if bank and bank not in cfg.ALLOWED_BANKS:
                 raise ValueError(f"非法银行/平台: {bank}，合法值: {cfg.ALLOWED_BANKS}")
+        # 先删除该日期+银行的旧数据，再插入（快照覆盖）
+        banks = set(i.get("bank", "") for i in items)
+        for bank in banks:
+            conn.execute("DELETE FROM holdings WHERE record_date = ? AND bank = ?", (record_date, bank))
         conn.executemany(
-            "INSERT OR IGNORE INTO holdings (fund_name, bank, amount, tag, record_date) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO holdings (fund_name, bank, amount, tag, record_date) VALUES (?, ?, ?, ?, ?)",
             [(i["name"], i.get("bank", ""), float(i["amount"]), i["tag"], record_date) for i in items]
         )
         conn.commit()
