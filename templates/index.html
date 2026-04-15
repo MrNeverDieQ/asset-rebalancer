@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资产配置再平衡</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 24px; font-size: 24px; }
+
+        /* 上传区 */
+        .upload-card { background: #fff; border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 24px; }
+        .upload-card input[type=file] { margin: 12px 0; }
+        .upload-card button { background: #1677ff; color: #fff; border: none; padding: 10px 32px; border-radius: 6px; font-size: 15px; cursor: pointer; }
+        .upload-card button:hover { background: #0958d9; }
+
+        /* Flash 消息 */
+        .flash { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+        .flash.error { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; }
+
+        /* 结果区 */
+        .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 20px; }
+        .card h2 { font-size: 18px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+        .summary-num { font-size: 28px; font-weight: 700; color: #1677ff; }
+
+        /* 表格 */
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #fafafa; text-align: left; padding: 10px 12px; font-weight: 600; border-bottom: 2px solid #f0f0f0; }
+        td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+
+        /* 偏离条 */
+        .bar-wrap { width: 120px; height: 8px; background: #f0f0f0; border-radius: 4px; display: inline-block; vertical-align: middle; }
+        .bar-fill { height: 100%; border-radius: 4px; }
+        .bar-ok { background: #52c41a; }
+        .bar-warn { background: #faad14; }
+        .bar-danger { background: #ff4d4f; }
+
+        /* 操作计划 */
+        .action-buy { color: #389e0d; font-weight: 600; }
+        .action-sell { color: #cf1322; font-weight: 600; }
+        .step-num { display: inline-block; width: 24px; height: 24px; line-height: 24px; text-align: center; border-radius: 50%; font-size: 12px; font-weight: 700; color: #fff; margin-right: 8px; }
+        .step-buy { background: #52c41a; }
+        .step-sell { background: #ff4d4f; }
+
+        .sub-info { font-size: 11px; color: #999; margin-top: 2px; }
+
+        .status-ok { color: #52c41a; font-size: 20px; }
+        .status-warn { color: #ff4d4f; font-size: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📊 资产配置再平衡</h1>
+
+    <!-- Flash 消息 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="flash {{ cat }}">{{ msg }}</div>
+    {% endfor %}
+    {% endwith %}
+
+    <!-- 上传区 -->
+    <div class="upload-card">
+        <form method="POST" enctype="multipart/form-data">
+            <p>上传持仓 Excel 文件（含：基金名称、时间、金额、类型）</p>
+            <input type="file" name="file" accept=".xlsx,.xls" required>
+            <br>
+            <button type="submit">开始分析</button>
+        </form>
+    </div>
+
+    {% if result %}
+    <!-- 总览 -->
+    <div class="card">
+        <h2>资产总览</h2>
+        <p>总资产：<span class="summary-num">¥{{ "{:,.2f}".format(result.total_amount) }}</span></p>
+        <p style="margin-top:8px;">
+            状态：
+            {% if result.need_rebalance %}
+            <span class="status-warn">⚠️ 需要再平衡</span>
+            {% else %}
+            <span class="status-ok">✅ 配置合理，无需调整</span>
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- 偏离分析 -->
+    <div class="card">
+        <h2>偏离分析</h2>
+        <table>
+            <thead><tr><th>层级</th><th>项目</th><th>当前</th><th>目标</th><th>偏离</th><th>状态</th></tr></thead>
+            <tbody>
+            {% for d in result.deviations %}
+            <tr>
+                <td>{{ d.layer }}</td>
+                <td>{{ d.name }}</td>
+                <td>{{ "%.2f"|format(d.current_ratio * 100) }}%</td>
+                <td>{{ "%.2f"|format(d.target_ratio * 100) }}%</td>
+                <td>
+                    {{ "%+.2f"|format(d.deviation * 100) }}%
+                    <div class="bar-wrap">
+                        {% set w = ([d.deviation|abs * 100 / 10 * 100, 100]|min)|int %}
+                        <div class="bar-fill {% if not d.need_rebalance %}bar-ok{% elif d.deviation|abs > 0.08 %}bar-danger{% else %}bar-warn{% endif %}" style="width:{{ w }}%"></div>
+                    </div>
+                </td>
+                <td>{% if d.need_rebalance %}⚠️ {{ d.action }}{% else %}✅{% endif %}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 操作计划 -->
+    {% if result.actions %}
+    <div class="card">
+        <h2>操作计划（先买入 → 后卖出）</h2>
+        <table>
+            <thead><tr><th>步骤</th><th>操作</th><th>类型</th><th>金额</th><th>当前 → 目标</th></tr></thead>
+            <tbody>
+            {% for a in result.actions %}
+            <tr>
+                <td><span class="step-num {% if a.action == '买入' %}step-buy{% else %}step-sell{% endif %}">{{ loop.index }}</span></td>
+                <td><span class="{% if a.action == '买入' %}action-buy{% else %}action-sell{% endif %}">{{ a.action }}</span></td>
+                <td>{{ a.tag }}</td>
+                <td>¥{{ "{:,.2f}".format(a.amount) }}</td>
+                <td>
+                    ¥{{ "{:,.2f}".format(a.current) }} → ¥{{ "{:,.2f}".format(a.target) }}
+                    <div class="sub-info">{{ "%.2f"|format(a.current_ratio * 100) }}% → {{ "%.2f"|format(a.target_ratio * 100) }}%</div>
+                    <div class="sub-info">目标: {{ a.formula }}</div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% set buy_total = result.actions|selectattr('action','equalto','买入')|map(attribute='amount')|sum %}
+        {% set sell_total = result.actions|selectattr('action','equalto','卖出')|map(attribute='amount')|sum %}
+        {% set cash_change = sell_total - buy_total %}
+        <p style="margin-top:16px; padding:12px 16px; background:#f6f8fa; border-radius:8px; font-size:14px;">
+            💰 操作完成后现金变动：
+            {% if cash_change >= 0 %}
+            <span style="color:#389e0d; font-weight:600;">+¥{{ "{:,.2f}".format(cash_change) }}</span>（卖出回款多于买入支出）
+            {% else %}
+            <span style="color:#cf1322; font-weight:600;">-¥{{ "{:,.2f}".format(cash_change|abs) }}</span>（买入支出多于卖出回款）
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+</body>
+</html>
