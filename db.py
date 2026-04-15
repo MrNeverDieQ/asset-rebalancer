@@ -45,6 +45,11 @@ def save_holdings(items: List[Dict], record_date: str = None) -> int:
 
     conn = _get_conn()
     try:
+        # 校验银行名称
+        for i in items:
+            bank = i.get("bank", "")
+            if bank and bank not in cfg.ALLOWED_BANKS:
+                raise ValueError(f"非法银行/平台: {bank}，合法值: {cfg.ALLOWED_BANKS}")
         conn.executemany(
             "INSERT OR IGNORE INTO holdings (fund_name, bank, amount, tag, record_date) VALUES (?, ?, ?, ?, ?)",
             [(i["name"], i.get("bank", ""), float(i["amount"]), i["tag"], record_date) for i in items]

@@ -81,7 +81,12 @@
             <label>记录日期：</label>
             <input type="date" id="record-date" value="{{ now }}">
             <label style="margin-left:16px">银行/平台：</label>
-            <input type="text" id="record-bank" placeholder="如：招商银行、天天基金" style="width:200px">
+            <select id="record-bank" style="width:200px;padding:6px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:14px" required>
+                <option value="">请选择</option>
+                {% for bank in allowed_banks %}
+                <option value="{{ bank }}">{{ bank }}</option>
+                {% endfor %}
+            </select>
         </div>
         <table>
             <thead>

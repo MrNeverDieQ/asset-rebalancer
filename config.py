@@ -46,3 +46,6 @@ OUTPUT_REPORT = "rebalance_report.xlsx"
 
 # ============ 数据库 ============
 DB_PATH = "portfolio.db"
+
+# ============ 银行/平台 ============
+ALLOWED_BANKS = ["招商银行", "平安银行", "民生银行"]

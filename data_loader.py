@@ -44,6 +44,13 @@ def load_portfolio(filepath: str) -> Dict[str, float]:
     if invalid:
         raise ValueError(f"存在未知类型 tag: {invalid}")
 
+    # 校验银行名称
+    col_bank = cfg.COLUMN_MAP["bank"]
+    if col_bank in df_latest.columns:
+        invalid_banks = set(df_latest[col_bank]) - set(cfg.ALLOWED_BANKS)
+        if invalid_banks:
+            raise ValueError(f"存在未知银行/平台: {invalid_banks}，合法值: {cfg.ALLOWED_BANKS}")
+
     # 按 tag 汇总
     summary = df_latest.groupby(col_tag)[col_amount].sum().to_dict()
     # 确保所有 tag 都有值

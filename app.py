@@ -54,7 +54,7 @@ def index():
 
 @app.route("/ocr", methods=["GET"])
 def ocr_page():
-    return render_template("ocr.html", items=None, all_tags=cfg.ALL_TAGS, now=datetime.now().strftime("%Y-%m-%d"))
+    return render_template("ocr.html", items=None, all_tags=cfg.ALL_TAGS, allowed_banks=cfg.ALLOWED_BANKS, now=datetime.now().strftime("%Y-%m-%d"))
 
 
 @app.route("/ocr/upload", methods=["POST"])
@@ -80,7 +80,7 @@ def ocr_upload():
     for item in items:
         item["tag"] = tagger.auto_tag(item["name"])
 
-    return render_template("ocr.html", items=items, all_tags=cfg.ALL_TAGS, now=datetime.now().strftime("%Y-%m-%d"))
+    return render_template("ocr.html", items=items, all_tags=cfg.ALL_TAGS, allowed_banks=cfg.ALLOWED_BANKS, now=datetime.now().strftime("%Y-%m-%d"))
 
 
 @app.route("/ocr/save", methods=["POST"])
