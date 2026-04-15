@@ -34,7 +34,7 @@ def save_holdings(items: List[Dict], record_date: str = None) -> int:
     保存一批持仓记录。
 
     Args:
-        items: [{"name": "沪深300", "amount": 35000, "tag": "大盘"}, ...]
+        items: [{"name": "沪深300", "amount": 35000, "tag": "大盘", "bank": "招商"}, ...]
         record_date: 记录日期，默认今天
 
     Returns:
