@@ -40,14 +40,25 @@
 
 ## 使用方法
 
-```bash
-# 安装依赖
-pip install pandas openpyxl flask
+### 方式一：Docker（推荐，无需关心 Python 版本）
 
-# 启动 Web
-python3 app.py
-# 浏览器打开 http://localhost:40511
+```bash
+git clone https://github.com/MrNeverDieQ/asset-rebalancer.git
+cd asset-rebalancer
+docker build -t asset-rebalancer .
+docker run -p 40511:40511 asset-rebalancer
 ```
+
+### 方式二：本地运行（需要 Python 3.8+）
+
+```bash
+git clone https://github.com/MrNeverDieQ/asset-rebalancer.git
+cd asset-rebalancer
+pip install -r requirements.txt
+python3 app.py
+```
+
+浏览器打开 http://localhost:40511
 
 两种数据录入方式：
 1. **Excel 分析**：上传 Excel 文件
