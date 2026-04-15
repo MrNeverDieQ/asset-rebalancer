@@ -175,6 +175,7 @@ function saveData() {
 
     const date = document.getElementById('record-date').value;
     const bank = document.getElementById('record-bank').value.trim();
+    if (!bank) { showToast('请选择银行/平台', 'error'); return; }
 
     fetch('/ocr/save', {
         method: 'POST',

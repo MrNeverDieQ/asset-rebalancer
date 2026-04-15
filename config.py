@@ -47,5 +47,8 @@ OUTPUT_REPORT = "rebalance_report.xlsx"
 # ============ 数据库 ============
 DB_PATH = "portfolio.db"
 
+# ============ OCR ============
+ALLOWED_IMAGE_EXT = (".png", ".jpg", ".jpeg", ".bmp", ".webp")
+
 # ============ 银行/平台 ============
 ALLOWED_BANKS = ["招商银行", "平安银行", "民生银行"]
